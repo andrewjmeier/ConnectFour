@@ -48,24 +48,29 @@
 	var TableTop = __webpack_require__(1);
 
 	// Import other needed classes
-	var ConnectFourGame = __webpack_require__(29);
-	var ConnectFourBoard = __webpack_require__(30);
-	var ConnectFourView = __webpack_require__(31);
-
-	// create the players
-	var playerOne = new TableTop.Player("Alice", 0xFF0000);
-	var playerTwo = new TableTop.Player("Bob", 0x000000);
-	var players = [playerOne, playerTwo];
+	var ConnectFourGame = __webpack_require__(33);
+	var ConnectFourBoard = __webpack_require__(34);
+	var ConnectFourView = __webpack_require__(35);
 
 	// create the Board, Game, and TurnMap
 	var board = new ConnectFourBoard();
-	var game = new ConnectFourGame(players, board);
-	var turnMap = new TableTop.ManualTurn(game);
-	game.setTurnMap(turnMap);
+	var game = new ConnectFourGame(board);
 
-	// create our view, and draw it
 	var view = new ConnectFourView(game, turnMap);
-	view.drawBoard();
+
+	//create our startView
+	var startView = new TableTop.StartView(game); 
+
+	// create our next player view
+	var nextPlayerView = new TableTop.NextPlayerView(game);
+
+	// create our game over view
+	var gameOverView = new TableTop.GameOverView(game);
+
+
+
+	var turnMap = new TableTop.ManualTurn(game, startView, view, gameOverView, nextPlayerView);
+	game.setTurnMap(turnMap);
 
 	// this initiates the TurnMap ("Gameloop") and 
 	// gets the ball rolling!
@@ -88,23 +93,27 @@
 
 	var core = Object.assign({
 
-	    Board: __webpack_require__(3),
-	    Card: __webpack_require__(9),
-	    Component: __webpack_require__(4),
-	    Constants: __webpack_require__(10),
-	    Deck: __webpack_require__(11),
-	    EdgeTile: __webpack_require__(13),
-	    Game: __webpack_require__(15),
-	    GridBoard: __webpack_require__(21),
-	    ManualTurn: __webpack_require__(16),
-	    Player: __webpack_require__(22),
-	    Tile: __webpack_require__(14),
-	    Token: __webpack_require__(23),
-	    Trade: __webpack_require__(24),
-	    Turn: __webpack_require__(17),
-	    Utils: __webpack_require__(12),
-	    VertexTile: __webpack_require__(25),
-	    View: __webpack_require__(26)
+	    ArrayBoard: __webpack_require__(3),
+	    Board: __webpack_require__(8),
+	    Card: __webpack_require__(10),
+	    Component: __webpack_require__(9),
+	    Constants: __webpack_require__(11),
+	    Deck: __webpack_require__(12),
+	    EdgeTile: __webpack_require__(14),
+	    Game: __webpack_require__(16),
+	    GameOverView: __webpack_require__(22),
+	    GridBoard: __webpack_require__(23),
+	    ManualTurn: __webpack_require__(17),
+	    NextPlayerView: __webpack_require__(24),
+	    Player: __webpack_require__(25),
+	    StartView: __webpack_require__(26),
+	    Tile: __webpack_require__(15),
+	    Token: __webpack_require__(27),
+	    Trade: __webpack_require__(28),
+	    Turn: __webpack_require__(18),
+	    Utils: __webpack_require__(13),
+	    VertexTile: __webpack_require__(29),
+	    View: __webpack_require__(30)
 
 	});
 
@@ -115,58 +124,58 @@
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	Component = __webpack_require__(4);
-	    inherits = __webpack_require__(5).inherits;
+	var inherits = __webpack_require__(4).inherits;
+	var Board = __webpack_require__(8);
 
-	// more of a placeholder for now -
-	// should talk when merged to properly integrate this with
-	// existing "board" and "players" implementations if any exist
-	function Board() {
-	  this.spaces = [];
-	  this.tokens = [];
-	}
+	/**
+	 * The ArrayBoard class
+	 * @constructor
+	 * @extends {Board}
+	 * @param {int} width - Number of tiles across the board
+	 * @param {int} height - Number of tiles down the board
+	*/
+	function ArrayBoard(width, height) { 
+	  Board.call(this);
+	  var numberOfSpaces = (width * 2) + (height * 2) - 2;
+	  
+	  this.tiles = Array(numberOfSpaces);
 
-	Board.prototype.getSpace = function(idx) { 
-	  return this.spaces[idx];
+	  this.width = width;
+	  this.height = height;
 	};
 
-	// TODO, maybe pass the token or the token class to this method?
-	Board.prototype.buildTokenForSpace = function(token, tile) { 
-	  tile.addOccupier(token);
-	  this.tokens.push(token);
+	inherits(ArrayBoard, Board);
+
+	/**
+	 * Method to get the tile at the given index
+	 * @param {int} index - The index of the tile wanted
+	 * @returns {Tile}
+	*/
+	ArrayBoard.prototype.getTile = function(index) { 
+	  return this.tiles[index]
 	};
 
-	module.exports = Board;
+	/**
+	 * Method to get the index of a Tile in the board
+	 * @param {Tile} tile - A board tile
+	 * @returns {int}
+	*/
+	ArrayBoard.prototype.getTilePosition = function(tile) { 
+
+	  for (var i = 0; i < this.tiles.length; i++) {
+	    if (this.tiles[i] == tile) { 
+	      return i;
+	    } 
+	  }
+	  
+	  return null;
+	};
+
+	module.exports = ArrayBoard;
 
 
 /***/ },
 /* 4 */
-/***/ function(module, exports) {
-
-	function Component(type) {
-	    this.subscribers = [];
-	}
-
-	/*
-	Standard message emitter functions for model tabletop model components
-	The message passing implementation is inspired by machina.js event emitters.
-	*/
-
-	Component.prototype.sendMessage = function(message) {
-	    for (var i = 0; i < this.subscribers.length; i++) {
-	        console.log(this.subscribers[i]);
-	        this.subscribers[i].call(this, message);       
-	    }
-	};
-
-	Component.prototype.subscribe = function(callback) {
-	    this.subscribers.push(callback);
-	};
-
-	module.exports = Component; 
-
-/***/ },
-/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -694,7 +703,7 @@
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(7);
+	exports.isBuffer = __webpack_require__(6);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -738,7 +747,7 @@
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(8);
+	exports.inherits = __webpack_require__(7);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -756,10 +765,10 @@
 	  return Object.prototype.hasOwnProperty.call(obj, prop);
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(6)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(5)))
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -855,7 +864,7 @@
 
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -866,7 +875,7 @@
 	}
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -895,24 +904,106 @@
 
 
 /***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
+
+	/**
+	 * The Board class
+	 * @constructor
+	 * @extends {Component}
+	*/
+	function Board() {
+	  Component.call(this);
+	  this.tiles = [];
+	  this.tokens = [];
+	}
+
+	inherits(Board, Component);
+
+	Board.prototype.getTile = function(idx) { 
+	  return this.tiles[idx];
+	};
+
+	// TODO, maybe pass the token or the token class to this method?
+	Board.prototype.buildTokenForTile = function(token, tile) { 
+	  tile.addOccupier(token);
+	  this.tokens.push(token);
+	};
+
+	module.exports = Board;
+
+
+/***/ },
 /* 9 */
 /***/ function(module, exports) {
 
 	/**
+	 * The Component class
+	 * All game components should inherit from this class
+	 * @constructor
+	 * @param {int} type - the type of messages that the component subscribes to 
+	*/
+	function Component(type) {
+	    this.subscribers = [];
+	}
+
+	/*
+	Standard message emitter functions for model tabletop model components
+	The message passing implementation is inspired by machina.js event emitters.
+	*/
+
+	/**
+	 * Method to broadcast a message out to the other components
+	 * @param {string} message - Message to send
+	 * @returns {void}
+	*/
+	Component.prototype.sendMessage = function(message) {
+	    for (var i = 0; i < this.subscribers.length; i++) {
+	        console.log(this.subscribers[i]);
+	        this.subscribers[i].call(this, message);       
+	    }
+	};
+
+	/**
+	 * Method to subscribe to messages
+	 * @param {func} callback - A callback method to pass the message to
+	 * @returns {void}
+	*/
+	Component.prototype.subscribe = function(callback) {
+	    this.subscribers.push(callback);
+	};
+
+	module.exports = Component; 
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
+
+	/**
 	 * The Card class
 	 * @constructor
+	 * @extends {Component}
 	 * @param {string} text - The card's message
 	 * @param {function} action - An action to be taken when the card is drawn. action should take the game state as a parameter
 	*/
 	function Card(text, action) {
+	  Component.call(this);
 	  this.text = text;
 	  this.action = action;
 	};
 
+	inherits(Card, Component);
+
 	module.exports = Card;
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	// constants.js
@@ -957,7 +1048,7 @@
 
 	// MOVE EVALUATION TYPES
 
-	// space.performLandingAction() is called 
+	// tile.performLandingAction() is called 
 	ttConstants.moveEvaluationTypeLandingAction = 1;
 
 	// game.executeMove() is called
@@ -969,22 +1060,30 @@
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Utils = __webpack_require__(12);
+	var Utils = __webpack_require__(13);
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
+
 	/**
 	 * The Deck class
 	 * Should probably be subclassed to create the cards for the deck in the constructor
 	 * @constructor
+	 * @extends {Component}
 	*/
 	function Deck() {
+	  Component.call(this);
 	  this.cards = [];
 	  this.currentPosition = 0;
 	};
 
+	inherits(Deck, Component);
+
 	/**
-	 * Shuffle the deck
+	 * Shuffle the deck in place
+	 * @returns {void}
 	*/
 	Deck.prototype.shuffle = function() {
 	  Utils.shuffle(this.cards);
@@ -1014,7 +1113,7 @@
 	module.exports = Deck;
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports) {
 
 	var Utils = {
@@ -1028,12 +1127,19 @@
 	module.exports = Utils;
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Tile = __webpack_require__(14),
-	    inherits = __webpack_require__(5).inherits;
+	var Tile = __webpack_require__(15),
+	    inherits = __webpack_require__(4).inherits;
 
+	/**
+	 * The EdgeTile class
+	 * @constructor
+	 * @param {VertexTile} start - Vertex on one side of the edge
+	 * @param {VertexTile} end - Vertex on the other side of the edge
+	 * @extends {Tile}
+	*/
 	function EdgeTile(start, end) {
 	  Tile.call(this);
 	  this.startVertex = start;
@@ -1045,26 +1151,50 @@
 	module.exports = EdgeTile;
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	Component = __webpack_require__(4);
-	    inherits = __webpack_require__(5).inherits;
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
 
+	/**
+	 * The Tile class
+	 * @constructor
+	 * @extends {Component}
+	 * @param {Dictionary} - name {string}, color {hex}, occupier {Token}
+	*/
+	// TODO refactor parameters
 	function Tile(opts) {
+	  Component.call(this);
 	  this.name = opts.name;
 	  this.color = opts.color;
 	  this.occupier = opts.occupier; // todo: make this an array of tokens
-	}
+	};
 
+	inherits(Tile, Component);
+
+	/**
+	 * Remove all tokens from the Tile
+	 * @returns {void}
+	*/
 	Tile.prototype.clearOccupiers = function() { 
 	  this.occupier = null;
 	};
 
+	/**
+	 * Add a Token to the Tile
+	 * @param {Token} occupier - token to be added
+	 * @returns {void}
+	*/
 	Tile.prototype.addOccupier = function(occupier) { 
 	  this.occupier = occupier;
 	};
 
+	/**
+	 * Remove a Token from the Tile
+	 * @param {Token} occupier - token to be remvoed
+	 * @returns {void}
+	*/
 	Tile.prototype.removeOccupier = function(occupier) { 
 	  this.occupier = null;
 	};
@@ -1073,30 +1203,32 @@
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var c = __webpack_require__(10);
-	var ManualTurn = __webpack_require__(16);
-	var Component = __webpack_require__(4);
-	var inherits = __webpack_require__(5).inherits;
+	var c = __webpack_require__(11);
+	var ManualTurn = __webpack_require__(17);
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
 
 	/**
 	 * The Game class
 	 * @constructor
-	 * @param {Player|Array} players - A list of players
+	 * @extends {Component}
 	 * @param {Board} board - The game board
 	*/
-	function Game(players, board) {
+	function Game(board) {
 	  Component.call(this);
-	  this.players = players,
 	  this.board = board;
 	  this.dice = [];
-	  this.randomizeCurrentPlayer();
+	  this.players = [];
 	  this.turnMap = null;
 	  this.moveType = c.moveTypeDice; // manual movement or dicerolls
 	  this.proposedMove = {}; // for c.moveTypeManual
 	  this.moveEvaluationType = c.moveEvaluationTypeLandingAction;
+	  this.possibleNumPlayers = [2, 3, 4, 5];
+	  this.showNextPlayerScreen = true;
+	  this.playerColors = [0xFF0000, 0x000000, 0x00FF00, 0x0000FF, 0xFF00FF];
 	};
 
 	inherits(Game, Component);
@@ -1106,7 +1238,7 @@
 	 * This is required!
 	 * @param {Turn} turnMap - A turn object to be used by the game
 	*/
-	Game.prototype.setTurn = function(turnMap) {
+	Game.prototype.setTurnMap = function(turnMap) {
 	  this.turnMap = turnMap;
 	};
 
@@ -1116,10 +1248,6 @@
 	*/
 	Game.prototype.updateState = function(message) {
 	  this.turnMap.updateState(message, this);
-	};
-
-	Game.prototype.setTurnMap = function(turnMap) { 
-	  this.turnMap = turnMap;
 	};
 
 	/**
@@ -1133,6 +1261,16 @@
 	  } 
 	};
 
+
+	/**
+	 * Set the players for this game
+	 * @param {Player|Array} players - The players in the game
+	*/
+	Game.prototype.setPlayers = function(players) { 
+	  this.players = players;
+	};
+
+
 	/**
 	 * Callback method from the view when a token is clicked
 	 * To be overridden by the subclass
@@ -1144,12 +1282,12 @@
 	};
 
 	/**
-	 * Callback method from the view when a space is clicked
+	 * Callback method from the view when a tile is clicked
 	 * To be overridden by the subclass
 	 * @abstract
-	 * @param {Space} space - the space object that was clicked in the view
+	 * @param {Tile} tile - the tile object that was clicked in the view
 	*/
-	Game.prototype.spaceClicked = function(space) {
+	Game.prototype.tileClicked = function(tile) {
 	  throw new Error('must be implemented by subclass!');
 	};
 
@@ -1210,23 +1348,44 @@
 
 	/**
 	 * Sets the last moved token for later reference
+	 * @param {Token} token - Last moved token
+	 * @returns {void}
 	*/
 	Game.prototype.submitMove = function(token) { 
 	  this.lastMovedToken = token;
 	};
 
+	/**
+	 * Switch to the next player
+	 * Override to provide more logic on determining the next player
+	 * @returns {void}
+	*/
 	Game.prototype.nextPlayer = function() { 
 	  this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
 	};
 
-	Game.prototype.setProposedMoveDestination = function(space) { 
-	  this.proposedMove.destination = space;
+	/**
+	 * Set the destination for a proposed move
+	 * @param {Tile} tile - the tile to move to
+	 * @returns {void}
+	*/
+	Game.prototype.setProposedMoveDestination = function(tile) { 
+	  this.proposedMove.destination = tile;
 	};
 
+	/**
+	 * Set the token for a proposed move
+	 * @param {Token} token - the token to move
+	 * @returns {void}
+	*/
 	Game.prototype.setProposedMoveToken = function(token) { 
 	  this.proposedMove.token = token;
 	};
 
+	/**
+	 * A proposed move exists and it is valid
+	 * @returns {boolean}
+	*/
 	Game.prototype.hasValidMove = function() { 
 	  
 	  if (this.moveType == c.moveTypeManual &&  (!this.proposedMove.token || !this.proposedMove.destination)) {
@@ -1237,7 +1396,7 @@
 	  } 
 
 	  var token = this.proposedMove.token;
-	  var tile = token ? token.space : null;
+	  var tile = token ? token.tile : null;
 	  var destination = this.proposedMove.destination;
 
 	  return this.isValidMove(token, 
@@ -1245,26 +1404,45 @@
 	                          destination);
 	}; 
 
-	Game.prototype.isValidMove = function(token, oldSpace, newSpace) { 
+	/**
+	 * Determines if it is valid to move the given token to the new tile
+	 * @param {Token} token - token to place or move
+	 * @param {Tile} oldTile - the previous token location (could be null if token not on board yet)
+	 * @param {Tile} newTile - the new token location
+	 * @abstract 
+	 * @returns {boolean}
+	*/
+	Game.prototype.isValidMove = function(token, oldTile, newTile) { 
 	  console.warn("isValidMove should be implemented by the subclass");
 	  return true;
 	};
 
+	/**
+	 * Evaluates the current state of the game and determines if a player won
+	 * @param {Player} player - the current player
+	 * @abstract
+	 * @returns {boolean}
+	*/
 	Game.prototype.playerDidWin = function(player) {
 	  console.warn("playerDidWin should be implemented by the subclass");
 	  return false;
 	};
 
+	/** 
+	 * Execute the proposed move made by the player
+	 * @param {Player} player - the current player
+	 * @abstract
+	 * @returns {void}
+	*/
 	Game.prototype.executeMove = function(player) {
 	  throw new Error('executeMove must be implemented by the subclass!');
-	}
-
-	Game.prototype.moveTokenToSpace = function(token, destinationTile) { 
-	  token.space.removeOccupier(token);
-	  token.setSpace(destinationTile);
-	  destinationTile.addOccupier(token);
 	};
 
+	/**
+	 * Event for when a token is clicked on
+	 * @param {Token} token - the token that was clicked
+	 * @returns {void}
+	*/
 	Game.prototype.tokenClicked = function(token) { 
 	  if (this.moveType == c.moveTypeManual &&
 	      this.turnMap.getCurrentState() == "waitingForMove") { 
@@ -1272,8 +1450,12 @@
 	  }
 	};
 
-
-	Game.prototype.spaceClicked = function(space) { 
+	/**
+	 * Event for when a tile is clicked on
+	 * @param {Tile} tile - the tile that was clicked
+	 * @returns {void}
+	*/
+	Game.prototype.tileClicked = function(tile) { 
 	  /* make sure we're in the right state, 
 	   a token has been pressed, 
 	   and we're not a tile with a token on it (if we have > 0
@@ -1281,15 +1463,15 @@
 	  if (this.moveType == c.moveTypeManual && 
 	      this.turnMap.getCurrentState() == "waitingForMove" && 
 	      this.proposedMove.token && 
-	      this.proposedMove.token.space != space) { 
+	      this.proposedMove.token.tile != tile) { 
 
-	    this.setProposedMoveDestination(space);
+	    this.setProposedMoveDestination(tile);
 	    this.turnMap.updateState("makeMove");
 
 	  } else if (this.moveType == c.moveTypePlaceToken &&
 	      this.turnMap.getCurrentState() == "waitingForMove") {
 
-	    this.setProposedMoveDestination(space);
+	    this.setProposedMoveDestination(tile);
 	    this.turnMap.updateState("makeMove");
 	  }
 	};
@@ -1298,15 +1480,20 @@
 	module.exports = Game;
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Turn = __webpack_require__(17);
-	var inherits = __webpack_require__(5).inherits;
+	var Turn = __webpack_require__(18);
+	var inherits = __webpack_require__(4).inherits;
 
-	function ManualTurn(game) { 
+	function ManualTurn(game, startView, view, gameOverView, nextPlayerView) { 
 	  
 	  this.game = game;
+	  this.startView = startView;
+	  this.view = view;
+	  this.nextPlayerView = nextPlayerView;
+	  this.gameOverView = gameOverView;
+
 	  this.turnMap = new Turn({ 
 	    initialize: function( options ) {},
 	    
@@ -1321,6 +1508,33 @@
 	      // 1
 	      uninitialized: { 
 	        start : function() { 
+	          this.transition("startScreen");
+	          
+	        } 
+	      },
+
+	      // 1a
+	      startScreen:{
+	        _onEnter: function() { 
+	          startView.drawView();
+	        },
+	        play : function() { 
+	          startView.removeView();
+	          if(game.showNextPlayerScreen){
+	            this.transition("nextPlayerScreen");
+	          } else {
+	            this.transition("waitingForMove");
+	          }
+	        } 
+	      },
+
+	      // 1b
+	      nextPlayerScreen:{
+	        _onEnter: function() { 
+	          nextPlayerView.drawView();
+	        },
+	        goToTurn : function() { 
+	          nextPlayerView.removeView();
 	          this.transition("waitingForMove");
 	        } 
 	      },
@@ -1328,6 +1542,7 @@
 	      // 2 
 	      waitingForMove: { 
 	        _onEnter: function() { 
+	          view.drawView();
 	          console.log(this.game.getCurrentPlayer().name + ": Make your move.");
 	        },
 	        
@@ -1345,10 +1560,16 @@
 	      postTurn: { 
 	        _onEnter : function() { 
 	          if (this.game.playerDidWin(game.getCurrentPlayer())) { 
+	            view.removeView();
 	            this.transition("gameOver");
 	          } else { 
 	            this.game.nextPlayer();
-	            this.transition("waitingForMove");
+	            if(game.showNextPlayerScreen){
+	              view.hideView();
+	              this.transition("nextPlayerScreen");
+	            } else {
+	              this.transition("waitingForMove");
+	            }
 	          }
 	        } 
 	      },
@@ -1356,20 +1577,28 @@
 	      // 4
 	      gameOver : { 
 	        _onEnter : function() { 
+	          gameOverView.drawView();
 	          console.log(this.game.getCurrentPlayer().name + " has won.");
-	        } 
+	        }
 	      } 
-	      
 	    } 
-	    
-	  });
-	  
+	  });  
 	} 
 
+
+	/**
+	 * executes the command in a state
+	 * @param {string} command - the command in the state to exercise
+	 * @returns {void}
+	*/
 	ManualTurn.prototype.updateState = function(command) {
 	    this.turnMap.handle(command);
 	};
 
+	/**
+	 * gets the current state
+	 * @returns {string}
+	*/
 	ManualTurn.prototype.getCurrentState = function() {
 	    return this.turnMap.compositeState();
 	};
@@ -1379,13 +1608,13 @@
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	Component = __webpack_require__(4);
-	    inherits = __webpack_require__(5).inherits;
+	Component = __webpack_require__(9);
+	    inherits = __webpack_require__(4).inherits;
 
-	var machina = __webpack_require__(18);
+	var machina = __webpack_require__(19);
 
 	var Turn = machina.Fsm.extend({
 	        initialize: function( ) {
@@ -1407,7 +1636,7 @@
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -1422,7 +1651,7 @@
 		/* istanbul ignore if  */
 		if ( true ) {
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(19) ], __WEBPACK_AMD_DEFINE_RESULT__ = function( _ ) {
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(20) ], __WEBPACK_AMD_DEFINE_RESULT__ = function( _ ) {
 				return factory( _, root );
 			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		/* istanbul ignore else  */
@@ -2009,7 +2238,7 @@
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
@@ -14364,10 +14593,10 @@
 	  }
 	}.call(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21)(module), (function() { return this; }())))
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -14383,18 +14612,87 @@
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// grid_board.js
+	var c = __webpack_require__(11);
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
 
-	var inherits = __webpack_require__(5).inherits;
-	var Board = __webpack_require__(3);
+	/**
+	 * The GameOverView class
+	 * @constructor
+	 * @param {Game} game - the game state
+	 * @extends {Component}
+	*/
+	function GameOverView(game) {
+	  Component.call(this);
+	  this.game = game;
+	};
+	inherits(GameOverView, Component);
 
+	/**
+	 * draws the game over view
+	 * @returns {void}
+	*/
+	GameOverView.prototype.drawView = function() {
+	  this.setupPage();
+	};
+
+	/**
+	 * sets up the pageto take in the provided HTML text string
+	 * @returns {void}
+	*/
+	GameOverView.prototype.setupPage = function() {
+	  document.getElementById('div1').innerHTML = this.getHTMLText();
+	  var context = this;
+	};
+
+	/**
+	 * provides the htmlText to be place in a div on the page
+	 * @returns {string} htmlText
+	*/
+	GameOverView.prototype.getHTMLText= function() {
+	  var htmlText = ' <form id="form1">'+
+	    this.game.getCurrentPlayer().name + ' has won!\
+	    </form> ';
+
+	  return htmlText;
+
+	};
+
+	/**
+	 * removes the game over view
+	 * @returns {void}
+	*/
+	GameOverView.prototype.removeView = function() {
+	  document.getElementById('div1').innerHTML = '';
+	};
+
+	GameOverView.prototype.drawMessage = function() {
+	};
+
+
+	module.exports = GameOverView;
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var inherits = __webpack_require__(4).inherits;
+	var Board = __webpack_require__(8);
+
+	/**
+	 * Grid Board (i.e. Checkers)
+	 * @constructor
+	 * @extends {Board}
+	 * @param {int} width - width of the board
+	 * @param {int} height - height of the board
+	*/
 	function GridBoard(width, height) { 
 	  Board.call(this);
 	  for (var i = 0; i < width; i++) { 
-	    this.spaces[i] = Array(this.height);
+	    this.tiles[i] = Array(this.height);
 	  }
 
 	  this.width = width;
@@ -14403,15 +14701,26 @@
 
 	inherits(GridBoard, Board);
 
-	GridBoard.prototype.getSpace = function(x, y) { 
-	  return this.spaces[x][y];
+	/**
+	 * Get a Tile from the board
+	 * @param {int} x - x coordinate of the tile
+	 * @param {int} y - y coordinate of the tile
+	 * @returns {Tile}
+	*/
+	GridBoard.prototype.getTile = function(x, y) { 
+	  return this.tiles[x][y];
 	};
 
-	GridBoard.prototype.getSpacePosition = function(space) { 
+	/**
+	 * Get the position of a Tile 
+	 * @param {Tile} tile - The tile to find position of
+	 * @returns {Dictionary|int} {x: a, y: b}
+	*/
+	GridBoard.prototype.getTilePosition = function(tile) { 
 
 	  for (var x = 0; x < this.width; x++) {
 	    for (var y = 0; y < this.height; y++) { 
-	      if (this.spaces[x][y] == space) { 
+	      if (this.tiles[x][y] == tile) { 
 	        return {x: x, y: y};
 	      } 
 	    } 
@@ -14424,25 +14733,102 @@
 
 
 /***/ },
-/* 22 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
-	Component = __webpack_require__(4);
-	    inherits = __webpack_require__(5).inherits;
+	var c = __webpack_require__(11);
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
+
+	/**
+	 * The NextPlayerView class
+	 * @constructor
+	 * @param {Game} game - the game state
+	 * @extends {Component}
+	*/
+	function NextPlayerView(game) {
+	  Component.call(this);
+	  this.game = game;
+	};
+	inherits(NextPlayerView, Component);
+
+	/**
+	 * draws the next player view
+	 * @returns {void}
+	*/
+	NextPlayerView.prototype.drawView = function() {
+	  this.setupPage();
+	};
+
+	/**
+	 * sets up the pageto take in the provided HTML text string 
+	 * also sets up the onclick for the button
+	 * @returns {void}
+	*/
+	NextPlayerView.prototype.setupPage = function() {
+	  document.getElementById('div1').innerHTML = this.getHTMLText();
+	  var context = this;
+	  document.getElementById('btnContinue').onclick=function(){context.handleButtonClick()};
+	};
+
+	/**
+	 * provides the htmlText to be place in a div on the page
+	 * @returns {string} htmlText
+	*/
+	NextPlayerView.prototype.getHTMLText= function() {
+	  var htmlText = ' <form id="form1">\
+	  Please pass to ' + this.game.getCurrentPlayer().name + '. It is their turn.<br>\
+	    <input type="button" id="btnContinue" value="Continue">\
+	    </form> ';
+	  return htmlText;
+	};
+
+	/**
+	 * Handles the onclick for the button by transition state
+	 * @returns {void}
+	*/
+	NextPlayerView.prototype.handleButtonClick = function() {
+	  //transition to turn itself
+	  this.game.updateState("goToTurn");
+	};
+
+	/**
+	 * removes the game over view
+	 * @returns {void}
+	*/
+	NextPlayerView.prototype.removeView = function() {
+	  document.getElementById('div1').innerHTML = '';
+	};
+
+	NextPlayerView.prototype.drawMessage = function() {
+	};
+
+
+	module.exports = NextPlayerView;
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
 
 	/**
 	 * A Player class
 	 * @constructor
+	 * @extends {Component}
 	 * @param {string} name - The player's name.
-	 * @param {int} number - The player's number.
+	 * @param {hex} color - A hex color for the player's tokens.
 	*/
-	function Player(name, number) {
+	function Player(name, color) {
+	  Component.call(this);
 	  this.name = name;
-	  // TODO - this should be refactored to be an array of tokens for the player
 	  this.tokens = [];
 	  this.position = 0;
-	  this.color = number;
+	  this.color = color;
 	};
+
+	inherits(Player, Component);
 
 	/**
 	 * Represents a Player.
@@ -14466,28 +14852,188 @@
 
 
 /***/ },
-/* 23 */
-/***/ function(module, exports) {
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var c = __webpack_require__(11);
+	var Player = __webpack_require__(25);
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
+
+	/**
+	 * The StartView class
+	 * @constructor
+	 * @param {Game} game - the game state
+	 * @extends {Component}
+	*/
+	function StartView(game) {
+	  Component.call(this);
+	  this.game = game;
+	};
+	inherits(StartView, Component);
+
+	/**
+	 * draws the game view
+	 * @returns {void}
+	*/
+	StartView.prototype.drawView = function() {
+	  this.setupPage(this.game.possibleNumPlayers[0]);
+	};
+
+	/**
+	 * sets up the pageto take in the provided HTML text string 
+	 * also sets up the onclick for the button 
+	 * and the onchnage for the drop down selector
+	 * @returns {void}
+	*/
+	StartView.prototype.setupPage = function(beginningNumPlayers) {
+	  document.getElementById('div1').innerHTML = this.getHTMLText(beginningNumPlayers);
+	  var context = this;
+	  document.getElementById('btnEnter').onclick=function(){context.handleButtonClick()};
+	  document.getElementById('numPlayersInput').onchange=function(){context.handleNumChanged()};
+
+	};
+
+	/**
+	 * provides the htmlText to be place in a div on the page
+	 * @returns {string} htmlText
+	*/
+	StartView.prototype.getHTMLText= function(beginningNumPlayers) {
+
+	  var htmlText = ' <form id="form1">\
+	    Enter the number of players:  ' + 
+	    this.createDropDown("numPlayersInput", this.game.possibleNumPlayers, beginningNumPlayers) + 
+	    '<br>';
+
+	  for(var i = 0; i < this.getNumPlayers(beginningNumPlayers); i++){
+	    htmlText = htmlText + 'Player ' + (i+1) + ' Name: \
+	    <input type="text" id="player' + (i+1) + 'Name"><br>';
+	  }
+	  //adding enter button
+	  htmlText = htmlText + '<input type="button" id="btnEnter" value="Enter">\
+	    </form> ';
+	  return htmlText;
+	};
+
+	/**
+	 * puts together the html text for a dropdown list of the possible number
+	 * of players into a string
+	 * @returns {string} dropDownHtml
+	*/
+	StartView.prototype.createDropDown = function(id, array, selected) {
+	  var dropDownHTML = '<select id="' + id + '">';
+
+	  for(var i = 0; i < array.length; i++){
+	    dropDownHTML = dropDownHTML + '<option value="' + array[i] +  '"';
+	    if(array[i] == selected){
+	      dropDownHTML = dropDownHTML + ' selected';
+	    } 
+	    dropDownHTML = dropDownHTML +  '>' +array[i] + '</option>';
+	  }
+	  dropDownHTML = dropDownHTML + '</select>';
+
+	  return dropDownHTML;
+	};
+
+	/**
+	 * finds out the number of players that should currently be displayed 
+	 * as selected in the dropdown list
+	 * @returns {int} numPlayers
+	*/
+	StartView.prototype.getNumPlayers = function(beginningNumPlayers) {
+	  if(!document.getElementById('numPlayersInput')){
+	    return beginningNumPlayers;
+	  }
+	  return document.getElementById('numPlayersInput').value;
+	};
+
+
+	/**
+	 * Handles the dropdown list value changed by re-setting up the page
+	 * @returns {void}
+	*/
+	StartView.prototype.handleNumChanged = function() {
+	  this.setupPage(document.getElementById('numPlayersInput').value);
+	};
+
+	/**
+	 * Handles the onclick for the button by creating players and transition state
+	 * @returns {void}
+	*/
+	StartView.prototype.handleButtonClick = function() {
+	  var players = [];
+	  var numPlayers;
+	  if(!document.getElementById('numPlayersInput')){
+	    numPlayers = this.game.possibleNumPlayers[0];
+	  } else {
+	    numPlayers = document.getElementById('numPlayersInput').value;
+	  }
+	  for(var i = 0; i < numPlayers; i++){
+	    var playerName;
+	    if(!document.getElementById('player' + (i+1) + 'Name') || document.getElementById('player' + (i+1) + 'Name').value == ""){
+	      playerName = "Player " + (i+1);
+	    } else {
+	      playerName = document.getElementById('player' + (i+1) + 'Name').value;
+	    }
+	    players[i] = new Player(playerName, this.game.playerColors[i]);
+	  }
+
+	  this.game.setPlayers(players);
+	  this.game.updateState("play");
+	};
+
+	/**
+	 * removes the game over view
+	 * @returns {void}
+	*/
+	StartView.prototype.removeView = function() {
+	  document.getElementById('div1').innerHTML = '';
+	};
+
+	StartView.prototype.drawMessage = function() {
+	};
+
+
+	module.exports = StartView;
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
 
 	/**
 	 * A Token class
 	 * @constructor
+	 * @extends {Component}
 	 * @param {string} owner - The player who owns this token.
+	 * @param {Tile} tile - The tile where the token is being placed
 	 * @param {string} [color=COLOR_BLACK] - Token color. See constants.js.
 	*/
-	function Token(owner, space, color) {
+	function Token(owner, tile, color) {
+	  Component.call(this);
 	  this.owner = owner;
-	  this.space = space;
+	  this.tile = tile;
 	  this.color = color;
 	  this.isDead = false;
 	};
 
+	inherits(Token, Component);
 
-	// sets variables for token, calls space functions
-	Token.prototype.setSpace = function(space) { 
-	  this.space = space;
+	/**
+	 * Set the token's tile
+	 * @param {Tile} tile - the tile where the token sits
+	 * @returns {void}
+	*/
+	Token.prototype.setTile = function(tile) { 
+	  this.tile = tile;
 	};
 
+	/**
+	 * Remove the token from the board and player
+	 * @returns {void}
+	*/
 	Token.prototype.destroy = function() { 
 
 	  for (var i = 0; i < this.owner.tokens.length; i++) { 
@@ -14495,18 +15041,29 @@
 	      this.owner.tokens.splice(i, 1);
 	  } 
 	  
-	  this.space.removeOccupier(this);
+	  this.tile.removeOccupier(this);
 	  this.owner = null;
-	  this.space = null;
+	  this.tile = null;
 	  this.isDead = true;
 
+	};
+
+	/**
+	 * Move a token from one tile to another
+	 * @param {Tile} tile - tile to move to
+	 * @returns {void}
+	*/
+	Token.prototype.moveToTile = function(tile) {
+	  this.tile.removeOccupier(this);
+	  this.setTile(tile);
+	  tile.addOccupier(this);
 	};
 
 	module.exports = Token;
 
 
 /***/ },
-/* 24 */
+/* 28 */
 /***/ function(module, exports) {
 
 	/**
@@ -14526,6 +15083,7 @@
 
 	/**
 	 * Execute the trade and swap the players' items
+	 * @returns {void}
 	*/
 	Trade.prototype.completeTrade = function() {
 	  this.proposingPlayer.addItems(this.answeringPlayerItems);
@@ -14534,6 +15092,7 @@
 
 	/**
 	 * Add the objects back to their respective players 
+	 * @returns {void}
 	*/
 	Trade.prototype.cancelTrade = function() {
 	  this.proposingPlayer.addItems(this.proposingPlayerItems);
@@ -14543,12 +15102,17 @@
 	module.exports = Trade
 
 /***/ },
-/* 25 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Tile = __webpack_require__(14),
-	    inherits = __webpack_require__(5).inherits;
+	var Tile = __webpack_require__(15);
+	var inherits = __webpack_require__(4).inherits;
 
+	/**
+	 * The VertexTile class
+	 * @constructor
+	 * @extends {Tile}
+	*/
 	function VertexTile() {
 	  Tile.call(this);
 	  this.edges = [];
@@ -14556,6 +15120,11 @@
 
 	inherits(VertexTile, Tile);
 
+	/**
+	 * Add an edge to the vertex to connect to another vertex
+	 * @param {EdgeTile} edge - edge tile to another vertex tile
+	 * @param {int} position - index in the list of edges for the tile
+	*/
 	VertexTile.prototype.addEdge = function(edge, position) {
 	    this.edges[position] = edge;
 	};
@@ -14564,40 +15133,87 @@
 
 
 /***/ },
-/* 26 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var c = __webpack_require__(10);
-	var GridBoard = __webpack_require__(21);
-	var PIXI = __webpack_require__(27);
+	var c = __webpack_require__(11);
+	var GridBoard = __webpack_require__(23);
+	var ArrayBoard = __webpack_require__(3);
+	var PIXI = __webpack_require__(31);
 
-	function View(game, turnMap) {
+	var Component = __webpack_require__(9);
+	var inherits = __webpack_require__(4).inherits;
+
+	/**
+	 * The View class
+	 * @constructor
+	 * @param {Game} game - the game state
+	 * @extends {Component}
+	*/
+	function View(game) {
+	  Component.call(this);
 	  this.game = game;
-	  this.turnMap = turnMap;
-	  this.turnMap.updateState("start");
 	  this.tokenViews = [];
 	  this.tileViews = [];
 	  this.boardView = new PIXI.Graphics();
 	  this.stage = new PIXI.Container();
+	  this.viewHidden = false;
 	  this.renderer = PIXI.autoDetectRenderer(c.canvasWidth, c.canvasHeight, 
 	                                          { transparent: true });
 	  document.body.appendChild(this.renderer.view);
-	  
-	  if (game.board instanceof GridBoard) { 
-	    for (var i = 0; i < this.game.board.height; i++) { 
-	      this.tileViews[i] = [];
-	    } 
-	  } 
 	};
+	inherits(View, Component);
 
+	/**
+	 * Shows the view if view hidden, otherwise draws the board
+	 * @returns {void}
+	*/
+	View.prototype.drawView = function() { 
+	  this.showView();
+	  if(!this.viewHidden){
+	    this.drawBoard();
+	  }
+	}
+
+	/**
+	 * Hides the view if hidden
+	 * @returns {void}
+	*/
+	View.prototype.hideView = function() { 
+	  this.stage.alpha = 0;
+	  this.viewHidden = true;
+	}
+
+	/**
+	 * Shows the board if hidden
+	 * @returns {void}
+	*/
+	View.prototype.showView = function() { 
+	  this.stage.alpha = 1;
+	}
+
+	/**
+	 * Removes the view
+	 * @returns {void}
+	*/
+	View.prototype.removeView = function() { 
+	  this.stage.alpha = 0;
+	}
+
+
+	/**
+	 * Draw the board for the given board type
+	 * @returns {void}
+	*/
 	View.prototype.drawBoard = function() { 
-	  if (this.game.board instanceof GridBoard) 
+	  if (this.game.board instanceof GridBoard) { 
 	    this.drawGridBoard();
-	  
+	  }
+	  else if (this.game.board instanceof ArrayBoard) {
+	    this.drawArrayBoard();
+	  }
 	  /* todo: 
 
-	   else if (this.game.board instanceof PathBoard) 
-	     this.drawPathBoard();
 	   else if (this.game.board instanceof GraphBoard)
 	     this.drawGraphBoard();
 	   else 
@@ -14606,7 +15222,14 @@
 	   */
 	};
 
+	/**
+	 * Draw the grid board type
+	 * @returns {void}
+	*/
 	View.prototype.drawGridBoard = function() {
+	  for (var i = 0; i < this.game.board.height; i++) { 
+	    this.tileViews[i] = [];
+	  }   
 	  
 	  this.boardView.x = c.boardStartX;
 	  this.boardView.y = c.boardStartY;
@@ -14619,9 +15242,69 @@
 	  this.animate();
 	};
 
-	// todo 
-	View.prototype.drawPathBoard = function() {
+	/**
+	 * Draw the array board type
+	 * @returns {void}
+	*/
+	View.prototype.drawArrayBoard = function() {
 
+	  this.boardView.x = c.boardStartX;
+	  this.boardView.y = c.boardStartY;
+	  this.boardView.beginFill(c.blueColor, 1);
+	  this.boardView.drawRect(0, 0, c.boardWidth, c.boardHeight);
+	  this.stage.addChild(this.boardView);
+	  this.drawArrayTiles();
+	  this.drawTokens();
+	  this.drawMessage();
+	  this.animate();
+
+	};
+
+	/**
+	 * draw the tiles for an Array Board
+	 * @returns {void}
+	*/
+	View.prototype.drawArrayTiles = function() {
+	  var tileWidth = c.boardWidth / this.game.board.width;
+	  var tileHeight = c.boardHeight / this.game.board.height;
+	  
+	  var tileNum = 0;
+
+	  for (var x = 0; x < this.game.board.width; x++) {
+	    tileNum = this.createTileView(tileNum, x * tileWidth, 0, tileWidth, tileHeight);
+	  }
+
+	  for (var y = 1; y < this.game.board.height; y++) {
+	    tileNum = this.createTileView(tileNum, c.boardWidth - tileWidth, y * tileHeight, tileWidth, tileHeight);
+	  }
+
+	  for (var x = this.game.board.width - 2; x >= 0; x--) {
+	    tileNum = this.createTileView(tileNum, x * tileWidth, c.boardHeight - tileHeight, tileWidth, tileHeight);
+	  }
+
+	  for (var y = this.game.board.height - 2; y > 0; y--) {
+	    tileNum = this.createTileView(tileNum, 0, y * tileHeight, tileWidth, tileHeight);
+	  }
+
+	};
+
+	/** 
+	 * Create a view for a tile, place it at the right location
+	 * @param {int} tileNum - index of the tile on the board
+	 * @param {int} x - x location of the tile
+	 * @param {int} y - y location of the tile
+	 * @param {int} width - width of the tile
+	 * @param {int} height - height of the tile
+	 * @returns {PIXI.Graphics} tileView
+	*/
+	View.prototype.createTileView = function(tileNum, x, y, width, height) {
+	  var tile = this.game.board.getTile(tileNum);
+	  var tileView = this.drawTile(tile, {width: width, height: height});
+	  tileView.x = x;
+	  tileView.y = y;
+	  this.tileViews[tileNum] = tileView;
+	  this.boardView.addChild(tileView);
+	  return tileNum + 1;
 	};
 
 	// todo 
@@ -14629,6 +15312,13 @@
 
 	};
 
+	/**
+	 * Draw a single tile
+	 * Override this method in your subclass to customize the board
+	 * @param {Tile} tile - the tile model object
+	 * @param {Dictionary} size - The width and height for the tile
+	 * @returns {PIXI.Graphics} tileView
+	*/
 	View.prototype.drawTile = function(tile, size) { 
 
 	  console.log("Using default drawTile()");
@@ -14636,22 +15326,26 @@
 	  tileView.lineStyle(1, 0, 1);
 	  tileView.beginFill(tile.color, 1);
 	  tileView.drawRect(0, 0, size.width, size.height);
-
+	  return tileView;
 	};
 
+	/**
+	 * Draw tile for the grid board
+	 * @returns {void}
+	*/
 	View.prototype.drawTiles = function() {
 
-	  var tileWidth = c.boardWidth / this.game.board.spaces[0].length;
-	  var tileHeight = c.boardHeight / this.game.board.spaces.length;
+	  var tileWidth = c.boardWidth / this.game.board.tiles[0].length;
+	  var tileHeight = c.boardHeight / this.game.board.tiles.length;
 	  var y_pos = c.boardHeight;
 	  var x_pos = 0;
 	  
-	  for (var y = 0; y < this.game.board.spaces.length; y++) {
+	  for (var y = 0; y < this.game.board.tiles.length; y++) {
 	    x_pos = 0;
 	    y_pos -= tileHeight;
-	    for (var x = 0; x < this.game.board.spaces[0].length; x++) {
+	    for (var x = 0; x < this.game.board.tiles[0].length; x++) {
 
-	      var tile = this.game.board.getSpace(x, y);
+	      var tile = this.game.board.getTile(x, y);
 	      var tileView = this.drawTile(tile, {width: tileWidth, height:tileHeight});
 	      tileView.x = x_pos;
 	      tileView.y = y_pos;
@@ -14660,16 +15354,16 @@
 	        tileView.interactive = true;
 	        var context = this;
 	        tileView.click = function(mouseData) {
-	          var selectedSpace;
+	          var selectedTile;
 	          for (var i = 0; i < context.tileViews.length; i++) {
 	            for (var j = 0; j < context.tileViews[0].length; j++) { 
 	              if (context.tileViews[i][j] == this) { 
-	                selectedSpace = context.game.board.getSpace(i, j);
+	                selectedTile = context.game.board.getTile(i, j);
 	              }
 	            }
 	          }
 	          
-	          context.game.spaceClicked(selectedSpace);
+	          context.game.tileClicked(selectedTile);
 	        };
 	      } 
 	      
@@ -14683,6 +15377,12 @@
 
 	// draws token, puts it on appropriate tile,
 	// adds it to tokenViews
+	/** 
+	 * Draw a tokens
+	 * Override this method in subclass to customize token drawing
+	 * @param {Token} token - token model data
+	 * @param {Dictionary} size - width and height of token
+	*/
 	View.prototype.drawToken = function(token, size) {
 
 	  console.log("Using default drawToken()");
@@ -14695,6 +15395,26 @@
 
 	};
 
+	/**
+	 * Get the tile view that a token is on
+	 * @param {Token} token - A game token
+	 * @returns {PIXI.Graphics} tileView
+	*/
+	View.prototype.getTileViewForToken = function(token) {
+	  var position = this.game.board.getTilePosition(token.tile);
+	  var tileView = null;
+	  if (this.game.board instanceof ArrayBoard) {
+	    tileView = this.tileViews[position];
+	  } else if (this.game.board instanceof GridBoard) {
+	    tileView = this.tileViews[position.x][position.y];
+	  }
+	  return tileView;
+	};
+
+	/**
+	 * Draw all the tokens on the board
+	 * @returns {void}
+	*/
 	View.prototype.drawTokens = function() {
 
 	  for (var playerIdx in this.game.players) { 
@@ -14702,8 +15422,7 @@
 	    for (var tokenIdx in player.tokens) {
 
 	      var token = player.tokens[tokenIdx];
-	      var position = this.game.board.getSpacePosition(token.space);
-	      var tileView = this.tileViews[position.x][position.y];
+	      var tileView = this.getTileViewForToken(token);
 	      
 	      // overridden by user, probably
 	      var tokenView = this.drawToken(token, tileView);
@@ -14728,6 +15447,11 @@
 	  }
 	};
 
+	/**
+	 * Update the token view if the token moved
+	 * @param {Dictionary} tokenView
+	 * @returns {void}
+	*/
 	View.prototype.updateTokenView = function(tokenView) {
 	  
 	  // if it's dead, destroy and return
@@ -14737,16 +15461,18 @@
 	  } 
 	  
 	  // update if we've moved
-	  var position = this.game.board.getSpacePosition(tokenView.token.space);
-	  var tileView = this.tileViews[position.x][position.y];
+	  var tileView = this.getTileViewForToken(tokenView.token);
 
 	  // make ourself a child of new tile
 	  tokenView.view.removeChild(tileView.view);
 	  tileView.addChild(tokenView.view);
 	};
 
+	/**
+	 * Update all of the tokens on the board
+	*/
 	View.prototype.updateTokens = function() {
-	  if (this.game.moveType = c.moveTypePlaceToken) {
+	  if (this.game.moveType == c.moveTypePlaceToken) {
 	    this.drawTokens();
 	  }
 
@@ -14757,6 +15483,10 @@
 	  } 
 	};
 	  
+	/**
+	 * Remove a token view from the view
+	 * @param {Token} token - the token to be destroyed
+	*/
 	View.prototype.destroyTokenViewForToken = function(token) { 
 
 	  var tokenView;
@@ -14771,6 +15501,10 @@
 	  } 
 	};
 
+	/**
+	 * Remove the token view from the view
+	 * @param {Dictionary} tokenView
+	*/
 	View.prototype.destroyTokenView = function(tokenView) { 
 	  
 	  tokenView.view.parent.removeChild(tokenView.view);
@@ -14799,7 +15533,7 @@
 	module.exports = View;
 
 /***/ },
-/* 27 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var require;var require;/* WEBPACK VAR INJECTION */(function(global, setImmediate) {(function(f){if(true){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.PIXI = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return require(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -42290,13 +43024,13 @@
 
 
 	//# sourceMappingURL=pixi.js.map
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(28).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(32).setImmediate))
 
 /***/ },
-/* 28 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(6).nextTick;
+	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(5).nextTick;
 	var apply = Function.prototype.apply;
 	var slice = Array.prototype.slice;
 	var immediateIds = {};
@@ -42372,14 +43106,14 @@
 	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
 	  delete immediateIds[id];
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(28).setImmediate, __webpack_require__(28).clearImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(32).setImmediate, __webpack_require__(32).clearImmediate))
 
 /***/ },
-/* 29 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var TableTop = __webpack_require__(1);
-	var inherits = __webpack_require__(5).inherits;
+	var inherits = __webpack_require__(4).inherits;
 
 
 	function ConnectFourGame(players, board, turnMap) {
@@ -42387,22 +43121,24 @@
 	  this.currentPlayer = 0;
 	  this.moveType = TableTop.Constants.moveTypePlaceToken;
 	  this.moveEvaluationType = TableTop.Constants.moveEvalationTypeGameEvaluator;
+	  this.possibleNumPlayers = [2];
+	  this.showNextPlayerScreen = false;
 	};
 
 	inherits(ConnectFourGame, TableTop.Game);
 
 	/*
-	  Make the move! Move the token from the previous space to the new space
+	  Make the move! Move the token from the previous tile to the new tile
 	*/
 	ConnectFourGame.prototype.executeMove = function() {  
 	  var destination = this.proposedMove.destination;
-	  var newPosition = this.board.getSpacePosition(destination);
+	  var newPosition = this.board.getTilePosition(destination);
 	  
 	  for (y = 0; y < 7; y++) {
-	    var tile = this.board.spaces[newPosition.x][y];
+	    var tile = this.board.tiles[newPosition.x][y];
 	    if (!tile.occupier) {
 	      var token = new TableTop.Token(this.getCurrentPlayer(), tile, this.getCurrentPlayer().color);
-	      this.board.buildTokenForSpace(token, tile);
+	      this.board.buildTokenForTile(token, tile);
 	      this.getCurrentPlayer().tokens.push(tile.occupier);
 	      return;
 	    }
@@ -42412,12 +43148,12 @@
 	};
 
 	/*
-	  Is it legal for the token to move from the old space to the new space?
+	  Is it legal for the token to move from the old tile to the new tile?
 	*/
-	ConnectFourGame.prototype.isValidMove = function(token, oldSpace, newSpace) { 
-	  var newPos = this.board.getSpacePosition(newSpace);
+	ConnectFourGame.prototype.isValidMove = function(token, oldTile, newTile) { 
+	  var newPos = this.board.getTilePosition(newTile);
 
-	  var topTile = this.board.spaces[newPos.x][6];
+	  var topTile = this.board.tiles[newPos.x][6];
 	  // console.log(!topTile.occupier, topTile, "isValidMove");
 	  return !topTile.occupier;
 	};
@@ -42428,7 +43164,7 @@
 	ConnectFourGame.prototype.playerDidWin = function(player) {
 	  for (x = 0; x < 7; x++) {
 	    for (y = 0; y < 7; y++) {
-	      var tile = this.board.spaces[x][y];
+	      var tile = this.board.tiles[x][y];
 	      if (this.checkSquareForWin(tile)) {
 	        return true;
 	      }
@@ -42440,7 +43176,7 @@
 	ConnectFourGame.prototype.checkSquareForWin = function(tile) {
 	  if (tile.occupier != null) {
 	    console.log(tile.occupier);
-	    var position = this.board.getSpacePosition(tile);
+	    var position = this.board.getTilePosition(tile);
 	    var color = tile.occupier.color;
 	    return this.checkRow(color, position) || this.checkColumn(color, position) || this.checkDiagonal(color, position) || this.checkOtherDiagonal(color, position);
 	  
@@ -42454,7 +43190,7 @@
 	    return false;
 	  }
 	  for (i = 1; i < 4; i++) {
-	    var occupier = this.board.spaces[position.x + i][position.y].occupier;
+	    var occupier = this.board.tiles[position.x + i][position.y].occupier;
 	    if (occupier == null || occupier.color !== color) {
 	      return false;
 	    }
@@ -42467,7 +43203,7 @@
 	    return false;
 	  }
 	  for (i = 1; i < 4; i++) {
-	    var occupier = this.board.spaces[position.x][position.y + i].occupier;
+	    var occupier = this.board.tiles[position.x][position.y + i].occupier;
 	    if (occupier == null || occupier.color !== color) {
 	      return false;
 	    }
@@ -42480,7 +43216,7 @@
 	    return false;
 	  }
 	  for (i = 1; i < 4; i++) {
-	    var occupier = this.board.spaces[position.x + i][position.y + i].occupier;
+	    var occupier = this.board.tiles[position.x + i][position.y + i].occupier;
 	    if (occupier == null || occupier.color !== color) {
 	      return false;
 	    }
@@ -42493,7 +43229,7 @@
 	    return false;
 	  }
 	  for (i = 1; i < 4; i++) {
-	    var occupier = this.board.spaces[position.x + i][position.y - i].occupier;
+	    var occupier = this.board.tiles[position.x + i][position.y - i].occupier;
 	    if (occupier == null || occupier.color !== color) {
 	      return false;
 	    }
@@ -42504,11 +43240,11 @@
 	module.exports = ConnectFourGame;
 
 /***/ },
-/* 30 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var TableTop = __webpack_require__(1);
-	var inherits = __webpack_require__(5).inherits;
+	var inherits = __webpack_require__(4).inherits;
 
 	function ConnectFourBoard() { 
 	  TableTop.GridBoard.call(this, 7, 7);
@@ -42526,7 +43262,7 @@
 	  for (var y = 0; y < this.height; y++) {
 	    for (var x = 0; x < this.width; x++) {
 	      tile = new TableTop.Tile({color: tileColor});
-	      this.spaces[x][y] = tile;
+	      this.tiles[x][y] = tile;
 	    }
 	  } 
 	};
@@ -42534,10 +43270,10 @@
 	module.exports = ConnectFourBoard;
 
 /***/ },
-/* 31 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(5).inherits;
+	var inherits = __webpack_require__(4).inherits;
 	var TableTop = __webpack_require__(1);
 
 	function ConnectFourView(game, turnMap) { 
