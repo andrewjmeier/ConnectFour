@@ -6,20 +6,25 @@ var ConnectFourGame = require("./connect_four_game.js");
 var ConnectFourBoard = require("./connect_four_board.js");
 var ConnectFourView = require("./connect_four_view.js");
 
-// create the players
-var playerOne = new TableTop.Player("Alice", 0xFF0000);
-var playerTwo = new TableTop.Player("Bob", 0x000000);
-var players = [playerOne, playerTwo];
-
 // create the Board, Game, and TurnMap
 var board = new ConnectFourBoard();
-var game = new ConnectFourGame(players, board);
-var turnMap = new TableTop.ManualTurn(game);
-game.setTurnMap(turnMap);
+var game = new ConnectFourGame(board);
 
-// create our view, and draw it
 var view = new ConnectFourView(game, turnMap);
-view.drawBoard();
+
+//create our startView
+var startView = new TableTop.StartView(game); 
+
+// create our next player view
+var nextPlayerView = new TableTop.NextPlayerView(game);
+
+// create our game over view
+var gameOverView = new TableTop.GameOverView(game);
+
+
+
+var turnMap = new TableTop.ManualTurn(game, startView, view, gameOverView, nextPlayerView);
+game.setTurnMap(turnMap);
 
 // this initiates the TurnMap ("Gameloop") and 
 // gets the ball rolling!

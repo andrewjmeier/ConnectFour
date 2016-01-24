@@ -17,7 +17,7 @@ ConnectFourBoard.prototype.buildTiles = function() {
   for (var y = 0; y < this.height; y++) {
     for (var x = 0; x < this.width; x++) {
       tile = new TableTop.Tile({color: tileColor});
-      this.spaces[x][y] = tile;
+      this.tiles[x][y] = tile;
     }
   } 
 };
