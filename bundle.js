@@ -48,9 +48,9 @@
 	var TableTop = __webpack_require__(1);
 
 	// Import other needed classes
-	var ConnectFourGame = __webpack_require__(33);
-	var ConnectFourBoard = __webpack_require__(34);
-	var ConnectFourView = __webpack_require__(35);
+	var ConnectFourGame = __webpack_require__(37);
+	var ConnectFourBoard = __webpack_require__(38);
+	var ConnectFourView = __webpack_require__(39);
 
 	// create the Board, Game, and TurnMap
 	var board = new ConnectFourBoard();
@@ -93,27 +93,28 @@
 
 	var core = Object.assign({
 
-	    ArrayBoard: __webpack_require__(3),
-	    Board: __webpack_require__(8),
-	    Card: __webpack_require__(10),
-	    Component: __webpack_require__(9),
-	    Constants: __webpack_require__(11),
-	    Deck: __webpack_require__(12),
-	    EdgeTile: __webpack_require__(14),
-	    Game: __webpack_require__(16),
-	    GameOverView: __webpack_require__(22),
-	    GridBoard: __webpack_require__(23),
-	    ManualTurn: __webpack_require__(17),
-	    NextPlayerView: __webpack_require__(24),
+	    ArrayBoard: __webpack_require__(10),
+	    Board: __webpack_require__(11),
+	    Card: __webpack_require__(12),
+	    Component: __webpack_require__(5),
+	    Constants: __webpack_require__(4),
+	    Deck: __webpack_require__(13),
+	    EdgeTile: __webpack_require__(15),
+	    Game: __webpack_require__(17),
+	    GameOverView: __webpack_require__(23),
+	    GridBoard: __webpack_require__(24),
+	    ManualTurn: __webpack_require__(18),
+	    NextPlayerView: __webpack_require__(3),
 	    Player: __webpack_require__(25),
 	    StartView: __webpack_require__(26),
-	    Tile: __webpack_require__(15),
-	    Token: __webpack_require__(27),
-	    Trade: __webpack_require__(28),
-	    Turn: __webpack_require__(18),
-	    Utils: __webpack_require__(13),
-	    VertexTile: __webpack_require__(29),
-	    View: __webpack_require__(30)
+	    StyleSheets: __webpack_require__(27),
+	    Tile: __webpack_require__(16),
+	    Token: __webpack_require__(31),
+	    Trade: __webpack_require__(32),
+	    Turn: __webpack_require__(19),
+	    Utils: __webpack_require__(14),
+	    VertexTile: __webpack_require__(33),
+	    View: __webpack_require__(34)
 
 	});
 
@@ -124,58 +125,177 @@
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(4).inherits;
-	var Board = __webpack_require__(8);
+	var c = __webpack_require__(4);
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
-	 * The ArrayBoard class
+	 * The NextPlayerView class
 	 * @constructor
-	 * @extends {Board}
-	 * @param {int} width - Number of tiles across the board
-	 * @param {int} height - Number of tiles down the board
+	 * @param {Game} game - the game state
+	 * @extends {Component}
 	*/
-	function ArrayBoard(width, height) { 
-	  Board.call(this);
-	  var numberOfSpaces = (width * 2) + (height * 2) - 2;
-	  
-	  this.tiles = Array(numberOfSpaces);
-
-	  this.width = width;
-	  this.height = height;
+	function NextPlayerView(game) {
+	  Component.call(this);
+	  this.game = game;
 	};
-
-	inherits(ArrayBoard, Board);
+	inherits(NextPlayerView, Component);
 
 	/**
-	 * Method to get the tile at the given index
-	 * @param {int} index - The index of the tile wanted
-	 * @returns {Tile}
+	 * draws the next player view
+	 * @returns {void}
 	*/
-	ArrayBoard.prototype.getTile = function(index) { 
-	  return this.tiles[index]
+	NextPlayerView.prototype.drawView = function() {
+	  this.setupPage();
 	};
 
 	/**
-	 * Method to get the index of a Tile in the board
-	 * @param {Tile} tile - A board tile
-	 * @returns {int}
+	 * sets up the pageto take in the provided HTML text string 
+	 * also sets up the onclick for the button
+	 * @returns {void}
 	*/
-	ArrayBoard.prototype.getTilePosition = function(tile) { 
-
-	  for (var i = 0; i < this.tiles.length; i++) {
-	    if (this.tiles[i] == tile) { 
-	      return i;
-	    } 
-	  }
-	  
-	  return null;
+	NextPlayerView.prototype.setupPage = function() {
+	  document.getElementById('div1').innerHTML = this.getHTMLText();
+	  var context = this;
+	  document.getElementById('btnContinue').onclick=function(){context.handleButtonClick()};
 	};
 
-	module.exports = ArrayBoard;
+	/**
+	 * provides the htmlText to be place in a div on the page
+	 * @returns {string} htmlText
+	*/
+	NextPlayerView.prototype.getHTMLText= function() {
+	  var htmlText = ' <form id="form1">\
+	  Please pass to ' + this.game.getCurrentPlayer().name + '. It is their turn.<br>\
+	    <input type="button" id="btnContinue" value="Continue">\
+	    </form> ';
+	  return htmlText;
+	};
 
+	/**
+	 * Handles the onclick for the button by transition state
+	 * @returns {void}
+	*/
+	NextPlayerView.prototype.handleButtonClick = function() {
+	  //transition to turn itself
+	  this.game.updateState("goToTurn");
+	};
+
+	/**
+	 * removes the game over view
+	 * @returns {void}
+	*/
+	NextPlayerView.prototype.removeView = function() {
+	  document.getElementById('div1').innerHTML = '';
+	};
+
+	NextPlayerView.prototype.drawMessage = function() {
+	};
+
+
+	module.exports = NextPlayerView;
 
 /***/ },
 /* 4 */
+/***/ function(module, exports) {
+
+	// constants.js
+
+	var ttConstants = new Object();
+
+	// CANVAS
+	// Constants defining the canvas properties
+	ttConstants.canvasWidth = 1200;
+	ttConstants.canvasHeight = 1500;
+
+	ttConstants.leftBuffer = 50;
+	ttConstants.upperBuffer = 50;
+
+	// BOARD
+	// Constants for defining the board on top of the canvas
+	ttConstants.boardWidth = 1100;
+	ttConstants.boardHeight = 1100;
+
+	ttConstants.boardStartX = ttConstants.leftBuffer;
+	ttConstants.boardStartY = ttConstants.upperBuffer;
+
+	// COLORS
+	// Constants defining basic colors.
+	ttConstants.blackColor = 0x000000;
+	ttConstants.whiteColor = 0xFFFFFF;
+	ttConstants.redColor = 0xFF0000;
+	ttConstants.blueColor = 0x0000FF;
+	ttConstants.greenColor = 0x008000;
+
+	// MOVE TYPES
+	// Constants defining how moving occurs
+
+	// user selects token, then new position
+	ttConstants.moveTypeManual = 1;
+
+	// user rolls dice, player is moved 
+	ttConstants.moveTypeDiceRoll = 2;
+
+	// user selects a position and a token is placed there
+	ttConstants.moveTypePlaceToken = 3;
+
+	// MOVE EVALUATION TYPES
+
+	// tile.performLandingAction() is called 
+	ttConstants.moveEvaluationTypeLandingAction = 1;
+
+	// game.executeMove() is called
+	// after game.isValidMove() verfies move is legal
+	ttConstants.moveEvaluationTypeGameEvaluator = 2;
+
+
+	module.exports = ttConstants;
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	/**
+	 * The Component class
+	 * All game components should inherit from this class
+	 * @constructor
+	 * @param {int} type - the type of messages that the component subscribes to 
+	*/
+	function Component(type) {
+	    this.subscribers = [];
+	}
+
+	/*
+	Standard message emitter functions for model tabletop model components
+	The message passing implementation is inspired by machina.js event emitters.
+	*/
+
+	/**
+	 * Method to broadcast a message out to the other components
+	 * @param {string} message - Message to send
+	 * @returns {void}
+	*/
+	Component.prototype.sendMessage = function(message) {
+	    for (var i = 0; i < this.subscribers.length; i++) {
+	        console.log(this.subscribers[i]);
+	        this.subscribers[i].call(this, message);       
+	    }
+	};
+
+	/**
+	 * Method to subscribe to messages
+	 * @param {func} callback - A callback method to pass the message to
+	 * @returns {void}
+	*/
+	Component.prototype.subscribe = function(callback) {
+	    this.subscribers.push(callback);
+	};
+
+	module.exports = Component; 
+
+/***/ },
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -703,7 +823,7 @@
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(6);
+	exports.isBuffer = __webpack_require__(8);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -747,7 +867,7 @@
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(7);
+	exports.inherits = __webpack_require__(9);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -765,10 +885,10 @@
 	  return Object.prototype.hasOwnProperty.call(obj, prop);
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(5)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(7)))
 
 /***/ },
-/* 5 */
+/* 7 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -864,7 +984,7 @@
 
 
 /***/ },
-/* 6 */
+/* 8 */
 /***/ function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -875,7 +995,7 @@
 	}
 
 /***/ },
-/* 7 */
+/* 9 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -904,11 +1024,65 @@
 
 
 /***/ },
-/* 8 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	var inherits = __webpack_require__(6).inherits;
+	var Board = __webpack_require__(11);
+
+	/**
+	 * The ArrayBoard class
+	 * @constructor
+	 * @extends {Board}
+	 * @param {int} width - Number of tiles across the board
+	 * @param {int} height - Number of tiles down the board
+	*/
+	function ArrayBoard(width, height) { 
+	  Board.call(this);
+	  var numberOfSpaces = (width * 2) + (height * 2) - 2;
+	  
+	  this.tiles = Array(numberOfSpaces);
+
+	  this.width = width;
+	  this.height = height;
+	};
+
+	inherits(ArrayBoard, Board);
+
+	/**
+	 * Method to get the tile at the given index
+	 * @param {int} index - The index of the tile wanted
+	 * @returns {Tile}
+	*/
+	ArrayBoard.prototype.getTile = function(index) { 
+	  return this.tiles[index]
+	};
+
+	/**
+	 * Method to get the index of a Tile in the board
+	 * @param {Tile} tile - A board tile
+	 * @returns {int}
+	*/
+	ArrayBoard.prototype.getTilePosition = function(tile) { 
+
+	  for (var i = 0; i < this.tiles.length; i++) {
+	    if (this.tiles[i] == tile) { 
+	      return i;
+	    } 
+	  }
+	  
+	  return null;
+	};
+
+	module.exports = ArrayBoard;
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The Board class
@@ -937,53 +1111,11 @@
 
 
 /***/ },
-/* 9 */
-/***/ function(module, exports) {
-
-	/**
-	 * The Component class
-	 * All game components should inherit from this class
-	 * @constructor
-	 * @param {int} type - the type of messages that the component subscribes to 
-	*/
-	function Component(type) {
-	    this.subscribers = [];
-	}
-
-	/*
-	Standard message emitter functions for model tabletop model components
-	The message passing implementation is inspired by machina.js event emitters.
-	*/
-
-	/**
-	 * Method to broadcast a message out to the other components
-	 * @param {string} message - Message to send
-	 * @returns {void}
-	*/
-	Component.prototype.sendMessage = function(message) {
-	    for (var i = 0; i < this.subscribers.length; i++) {
-	        console.log(this.subscribers[i]);
-	        this.subscribers[i].call(this, message);       
-	    }
-	};
-
-	/**
-	 * Method to subscribe to messages
-	 * @param {func} callback - A callback method to pass the message to
-	 * @returns {void}
-	*/
-	Component.prototype.subscribe = function(callback) {
-	    this.subscribers.push(callback);
-	};
-
-	module.exports = Component; 
-
-/***/ },
-/* 10 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The Card class
@@ -1003,69 +1135,12 @@
 	module.exports = Card;
 
 /***/ },
-/* 11 */
-/***/ function(module, exports) {
-
-	// constants.js
-
-	var ttConstants = new Object();
-
-	// CANVAS
-	// Constants defining the canvas properties
-	ttConstants.canvasWidth = 1200;
-	ttConstants.canvasHeight = 1500;
-
-	ttConstants.leftBuffer = 50;
-	ttConstants.upperBuffer = 50;
-
-	// BOARD
-	// Constants for defining the board on top of the canvas
-	ttConstants.boardWidth = 1100;
-	ttConstants.boardHeight = 1100;
-
-	ttConstants.boardStartX = ttConstants.leftBuffer;
-	ttConstants.boardStartY = ttConstants.upperBuffer;
-
-	// COLORS
-	// Constants defining basic colors.
-	ttConstants.blackColor = 0x000000;
-	ttConstants.whiteColor = 0xFFFFFF;
-	ttConstants.redColor = 0xFF0000;
-	ttConstants.blueColor = 0x0000FF;
-	ttConstants.greenColor = 0x008000;
-
-	// MOVE TYPES
-	// Constants defining how moving occurs
-
-	// user selects token, then new position
-	ttConstants.moveTypeManual = 1;
-
-	// user rolls dice, player is moved 
-	ttConstants.moveTypeDiceRoll = 2;
-
-	// user selects a position and a token is placed there
-	ttConstants.moveTypePlaceToken = 3;
-
-	// MOVE EVALUATION TYPES
-
-	// tile.performLandingAction() is called 
-	ttConstants.moveEvaluationTypeLandingAction = 1;
-
-	// game.executeMove() is called
-	// after game.isValidMove() verfies move is legal
-	ttConstants.moveEvaluationTypeGameEvaluator = 2;
-
-
-	module.exports = ttConstants;
-
-
-/***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Utils = __webpack_require__(13);
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	var Utils = __webpack_require__(14);
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The Deck class
@@ -1113,7 +1188,7 @@
 	module.exports = Deck;
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports) {
 
 	var Utils = {
@@ -1127,11 +1202,11 @@
 	module.exports = Utils;
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Tile = __webpack_require__(15),
-	    inherits = __webpack_require__(4).inherits;
+	var Tile = __webpack_require__(16),
+	    inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The EdgeTile class
@@ -1151,11 +1226,11 @@
 	module.exports = EdgeTile;
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The Tile class
@@ -1203,13 +1278,13 @@
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var c = __webpack_require__(11);
-	var ManualTurn = __webpack_require__(17);
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	var c = __webpack_require__(4);
+	var ManualTurn = __webpack_require__(18);
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The Game class
@@ -1480,11 +1555,11 @@
 	module.exports = Game;
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Turn = __webpack_require__(18);
-	var inherits = __webpack_require__(4).inherits;
+	var Turn = __webpack_require__(19);
+	var inherits = __webpack_require__(6).inherits;
 
 	function ManualTurn(game, startView, view, gameOverView, nextPlayerView) { 
 	  
@@ -1608,13 +1683,13 @@
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
-	Component = __webpack_require__(9);
-	    inherits = __webpack_require__(4).inherits;
+	Component = __webpack_require__(5);
+	    inherits = __webpack_require__(6).inherits;
 
-	var machina = __webpack_require__(19);
+	var machina = __webpack_require__(20);
 
 	var Turn = machina.Fsm.extend({
 	        initialize: function( ) {
@@ -1636,7 +1711,7 @@
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -1651,7 +1726,7 @@
 		/* istanbul ignore if  */
 		if ( true ) {
 			// AMD. Register as an anonymous module.
-			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(20) ], __WEBPACK_AMD_DEFINE_RESULT__ = function( _ ) {
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [ __webpack_require__(21) ], __WEBPACK_AMD_DEFINE_RESULT__ = function( _ ) {
 				return factory( _, root );
 			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 		/* istanbul ignore else  */
@@ -2238,7 +2313,7 @@
 
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
@@ -14593,10 +14668,10 @@
 	  }
 	}.call(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22)(module), (function() { return this; }())))
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -14612,12 +14687,12 @@
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var c = __webpack_require__(11);
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	var c = __webpack_require__(4);
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The GameOverView class
@@ -14676,11 +14751,11 @@
 	module.exports = GameOverView;
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(4).inherits;
-	var Board = __webpack_require__(8);
+	var inherits = __webpack_require__(6).inherits;
+	var Board = __webpack_require__(11);
 
 	/**
 	 * Grid Board (i.e. Checkers)
@@ -14733,85 +14808,11 @@
 
 
 /***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var c = __webpack_require__(11);
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
-
-	/**
-	 * The NextPlayerView class
-	 * @constructor
-	 * @param {Game} game - the game state
-	 * @extends {Component}
-	*/
-	function NextPlayerView(game) {
-	  Component.call(this);
-	  this.game = game;
-	};
-	inherits(NextPlayerView, Component);
-
-	/**
-	 * draws the next player view
-	 * @returns {void}
-	*/
-	NextPlayerView.prototype.drawView = function() {
-	  this.setupPage();
-	};
-
-	/**
-	 * sets up the pageto take in the provided HTML text string 
-	 * also sets up the onclick for the button
-	 * @returns {void}
-	*/
-	NextPlayerView.prototype.setupPage = function() {
-	  document.getElementById('div1').innerHTML = this.getHTMLText();
-	  var context = this;
-	  document.getElementById('btnContinue').onclick=function(){context.handleButtonClick()};
-	};
-
-	/**
-	 * provides the htmlText to be place in a div on the page
-	 * @returns {string} htmlText
-	*/
-	NextPlayerView.prototype.getHTMLText= function() {
-	  var htmlText = ' <form id="form1">\
-	  Please pass to ' + this.game.getCurrentPlayer().name + '. It is their turn.<br>\
-	    <input type="button" id="btnContinue" value="Continue">\
-	    </form> ';
-	  return htmlText;
-	};
-
-	/**
-	 * Handles the onclick for the button by transition state
-	 * @returns {void}
-	*/
-	NextPlayerView.prototype.handleButtonClick = function() {
-	  //transition to turn itself
-	  this.game.updateState("goToTurn");
-	};
-
-	/**
-	 * removes the game over view
-	 * @returns {void}
-	*/
-	NextPlayerView.prototype.removeView = function() {
-	  document.getElementById('div1').innerHTML = '';
-	};
-
-	NextPlayerView.prototype.drawMessage = function() {
-	};
-
-
-	module.exports = NextPlayerView;
-
-/***/ },
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * A Player class
@@ -14855,10 +14856,10 @@
 /* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var c = __webpack_require__(11);
+	var c = __webpack_require__(4);
 	var Player = __webpack_require__(25);
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The StartView class
@@ -15000,8 +15001,358 @@
 /* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(28);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(30)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../css-loader/index.js!./style.css", function() {
+				var newContent = require("!!./../../../css-loader/index.js!./style.css");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(29)();
+	// imports
+
+
+	// module
+	exports.push([module.id, "body {\n    background-color: #FFCC00;\n}\n\nh1 {\n    color: black;\n    margin-left: 200px;\n    font-family: Futura, \"Trebuchet MS\", Arial, sans-serif;\n    font-size: 20vw;\n    text-align: center;\n}\n\nform {\n    text-align: center;\n    font-size: 5vw;\n    font-family: Futura, \"Trebuchet MS\", Arial, sans-serif;\n}\n\nselect {\n\t   background: #FFE064;\n\t   width: 5%;\n\t   padding: 20px;\n\t   font-size: 4vw;\n\t   line-height: 1;\n\t   border: 0;\n\t   border-radius: 0;\n\t   height: 15%;\n\t   text-align: center;\n}\n\ninput {\n\t   background: #FFE064;\n\t   width: 15%;\n\t   padding: 10px;\n\t   font-size: 3vw;\n\t   line-height: 1;\n\t   border: 0;\n\t   border-radius: 0;\n\t   height: 15%;\n\t   text-align: center;\n\t   border-radius: 20px;\n}\n\ncanvas {\n\t    padding-left: 0;\n\t    padding-right: 0;\n\t    margin-left: auto;\n\t    margin-right: auto;\n\t    display: block;\n}", ""]);
+
+	// exports
+
+
+/***/ },
+/* 29 */
+/***/ function(module, exports) {
+
+	/*
+		MIT License http://www.opensource.org/licenses/mit-license.php
+		Author Tobias Koppers @sokra
+	*/
+	// css base code, injected by the css-loader
+	module.exports = function() {
+		var list = [];
+
+		// return the list of modules as css string
+		list.toString = function toString() {
+			var result = [];
+			for(var i = 0; i < this.length; i++) {
+				var item = this[i];
+				if(item[2]) {
+					result.push("@media " + item[2] + "{" + item[1] + "}");
+				} else {
+					result.push(item[1]);
+				}
+			}
+			return result.join("");
+		};
+
+		// import a list of modules into the list
+		list.i = function(modules, mediaQuery) {
+			if(typeof modules === "string")
+				modules = [[null, modules, ""]];
+			var alreadyImportedModules = {};
+			for(var i = 0; i < this.length; i++) {
+				var id = this[i][0];
+				if(typeof id === "number")
+					alreadyImportedModules[id] = true;
+			}
+			for(i = 0; i < modules.length; i++) {
+				var item = modules[i];
+				// skip already imported module
+				// this implementation is not 100% perfect for weird media query combinations
+				//  when a module is imported multiple times with different media queries.
+				//  I hope this will never occur (Hey this way we have smaller bundles)
+				if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+					if(mediaQuery && !item[2]) {
+						item[2] = mediaQuery;
+					} else if(mediaQuery) {
+						item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+					}
+					list.push(item);
+				}
+			}
+		};
+		return list;
+	};
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*
+		MIT License http://www.opensource.org/licenses/mit-license.php
+		Author Tobias Koppers @sokra
+	*/
+	var stylesInDom = {},
+		memoize = function(fn) {
+			var memo;
+			return function () {
+				if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+				return memo;
+			};
+		},
+		isOldIE = memoize(function() {
+			return /msie [6-9]\b/.test(window.navigator.userAgent.toLowerCase());
+		}),
+		getHeadElement = memoize(function () {
+			return document.head || document.getElementsByTagName("head")[0];
+		}),
+		singletonElement = null,
+		singletonCounter = 0,
+		styleElementsInsertedAtTop = [];
+
+	module.exports = function(list, options) {
+		if(false) {
+			if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+		}
+
+		options = options || {};
+		// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+		// tags it will allow on a page
+		if (typeof options.singleton === "undefined") options.singleton = isOldIE();
+
+		// By default, add <style> tags to the bottom of <head>.
+		if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
+
+		var styles = listToStyles(list);
+		addStylesToDom(styles, options);
+
+		return function update(newList) {
+			var mayRemove = [];
+			for(var i = 0; i < styles.length; i++) {
+				var item = styles[i];
+				var domStyle = stylesInDom[item.id];
+				domStyle.refs--;
+				mayRemove.push(domStyle);
+			}
+			if(newList) {
+				var newStyles = listToStyles(newList);
+				addStylesToDom(newStyles, options);
+			}
+			for(var i = 0; i < mayRemove.length; i++) {
+				var domStyle = mayRemove[i];
+				if(domStyle.refs === 0) {
+					for(var j = 0; j < domStyle.parts.length; j++)
+						domStyle.parts[j]();
+					delete stylesInDom[domStyle.id];
+				}
+			}
+		};
+	}
+
+	function addStylesToDom(styles, options) {
+		for(var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+			if(domStyle) {
+				domStyle.refs++;
+				for(var j = 0; j < domStyle.parts.length; j++) {
+					domStyle.parts[j](item.parts[j]);
+				}
+				for(; j < item.parts.length; j++) {
+					domStyle.parts.push(addStyle(item.parts[j], options));
+				}
+			} else {
+				var parts = [];
+				for(var j = 0; j < item.parts.length; j++) {
+					parts.push(addStyle(item.parts[j], options));
+				}
+				stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+			}
+		}
+	}
+
+	function listToStyles(list) {
+		var styles = [];
+		var newStyles = {};
+		for(var i = 0; i < list.length; i++) {
+			var item = list[i];
+			var id = item[0];
+			var css = item[1];
+			var media = item[2];
+			var sourceMap = item[3];
+			var part = {css: css, media: media, sourceMap: sourceMap};
+			if(!newStyles[id])
+				styles.push(newStyles[id] = {id: id, parts: [part]});
+			else
+				newStyles[id].parts.push(part);
+		}
+		return styles;
+	}
+
+	function insertStyleElement(options, styleElement) {
+		var head = getHeadElement();
+		var lastStyleElementInsertedAtTop = styleElementsInsertedAtTop[styleElementsInsertedAtTop.length - 1];
+		if (options.insertAt === "top") {
+			if(!lastStyleElementInsertedAtTop) {
+				head.insertBefore(styleElement, head.firstChild);
+			} else if(lastStyleElementInsertedAtTop.nextSibling) {
+				head.insertBefore(styleElement, lastStyleElementInsertedAtTop.nextSibling);
+			} else {
+				head.appendChild(styleElement);
+			}
+			styleElementsInsertedAtTop.push(styleElement);
+		} else if (options.insertAt === "bottom") {
+			head.appendChild(styleElement);
+		} else {
+			throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
+		}
+	}
+
+	function removeStyleElement(styleElement) {
+		styleElement.parentNode.removeChild(styleElement);
+		var idx = styleElementsInsertedAtTop.indexOf(styleElement);
+		if(idx >= 0) {
+			styleElementsInsertedAtTop.splice(idx, 1);
+		}
+	}
+
+	function createStyleElement(options) {
+		var styleElement = document.createElement("style");
+		styleElement.type = "text/css";
+		insertStyleElement(options, styleElement);
+		return styleElement;
+	}
+
+	function createLinkElement(options) {
+		var linkElement = document.createElement("link");
+		linkElement.rel = "stylesheet";
+		insertStyleElement(options, linkElement);
+		return linkElement;
+	}
+
+	function addStyle(obj, options) {
+		var styleElement, update, remove;
+
+		if (options.singleton) {
+			var styleIndex = singletonCounter++;
+			styleElement = singletonElement || (singletonElement = createStyleElement(options));
+			update = applyToSingletonTag.bind(null, styleElement, styleIndex, false);
+			remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);
+		} else if(obj.sourceMap &&
+			typeof URL === "function" &&
+			typeof URL.createObjectURL === "function" &&
+			typeof URL.revokeObjectURL === "function" &&
+			typeof Blob === "function" &&
+			typeof btoa === "function") {
+			styleElement = createLinkElement(options);
+			update = updateLink.bind(null, styleElement);
+			remove = function() {
+				removeStyleElement(styleElement);
+				if(styleElement.href)
+					URL.revokeObjectURL(styleElement.href);
+			};
+		} else {
+			styleElement = createStyleElement(options);
+			update = applyToTag.bind(null, styleElement);
+			remove = function() {
+				removeStyleElement(styleElement);
+			};
+		}
+
+		update(obj);
+
+		return function updateStyle(newObj) {
+			if(newObj) {
+				if(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)
+					return;
+				update(obj = newObj);
+			} else {
+				remove();
+			}
+		};
+	}
+
+	var replaceText = (function () {
+		var textStore = [];
+
+		return function (index, replacement) {
+			textStore[index] = replacement;
+			return textStore.filter(Boolean).join('\n');
+		};
+	})();
+
+	function applyToSingletonTag(styleElement, index, remove, obj) {
+		var css = remove ? "" : obj.css;
+
+		if (styleElement.styleSheet) {
+			styleElement.styleSheet.cssText = replaceText(index, css);
+		} else {
+			var cssNode = document.createTextNode(css);
+			var childNodes = styleElement.childNodes;
+			if (childNodes[index]) styleElement.removeChild(childNodes[index]);
+			if (childNodes.length) {
+				styleElement.insertBefore(cssNode, childNodes[index]);
+			} else {
+				styleElement.appendChild(cssNode);
+			}
+		}
+	}
+
+	function applyToTag(styleElement, obj) {
+		var css = obj.css;
+		var media = obj.media;
+		var sourceMap = obj.sourceMap;
+
+		if(media) {
+			styleElement.setAttribute("media", media)
+		}
+
+		if(styleElement.styleSheet) {
+			styleElement.styleSheet.cssText = css;
+		} else {
+			while(styleElement.firstChild) {
+				styleElement.removeChild(styleElement.firstChild);
+			}
+			styleElement.appendChild(document.createTextNode(css));
+		}
+	}
+
+	function updateLink(linkElement, obj) {
+		var css = obj.css;
+		var media = obj.media;
+		var sourceMap = obj.sourceMap;
+
+		if(sourceMap) {
+			// http://stackoverflow.com/a/26603875
+			css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+		}
+
+		var blob = new Blob([css], { type: "text/css" });
+
+		var oldSrc = linkElement.href;
+
+		linkElement.href = URL.createObjectURL(blob);
+
+		if(oldSrc)
+			URL.revokeObjectURL(oldSrc);
+	}
+
+
+/***/ },
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * A Token class
@@ -15063,7 +15414,7 @@
 
 
 /***/ },
-/* 28 */
+/* 32 */
 /***/ function(module, exports) {
 
 	/**
@@ -15102,11 +15453,11 @@
 	module.exports = Trade
 
 /***/ },
-/* 29 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Tile = __webpack_require__(15);
-	var inherits = __webpack_require__(4).inherits;
+	var Tile = __webpack_require__(16);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The VertexTile class
@@ -15133,16 +15484,16 @@
 
 
 /***/ },
-/* 30 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var c = __webpack_require__(11);
-	var GridBoard = __webpack_require__(23);
-	var ArrayBoard = __webpack_require__(3);
-	var PIXI = __webpack_require__(31);
+	var c = __webpack_require__(4);
+	var GridBoard = __webpack_require__(24);
+	var ArrayBoard = __webpack_require__(10);
+	var PIXI = __webpack_require__(35);
 
-	var Component = __webpack_require__(9);
-	var inherits = __webpack_require__(4).inherits;
+	var Component = __webpack_require__(5);
+	var inherits = __webpack_require__(6).inherits;
 
 	/**
 	 * The View class
@@ -15533,7 +15884,7 @@
 	module.exports = View;
 
 /***/ },
-/* 31 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var require;var require;/* WEBPACK VAR INJECTION */(function(global, setImmediate) {(function(f){if(true){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.PIXI = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return require(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -43024,13 +43375,13 @@
 
 
 	//# sourceMappingURL=pixi.js.map
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(32).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(36).setImmediate))
 
 /***/ },
-/* 32 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(5).nextTick;
+	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(7).nextTick;
 	var apply = Function.prototype.apply;
 	var slice = Array.prototype.slice;
 	var immediateIds = {};
@@ -43106,14 +43457,14 @@
 	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
 	  delete immediateIds[id];
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(32).setImmediate, __webpack_require__(32).clearImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(36).setImmediate, __webpack_require__(36).clearImmediate))
 
 /***/ },
-/* 33 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var TableTop = __webpack_require__(1);
-	var inherits = __webpack_require__(4).inherits;
+	var inherits = __webpack_require__(6).inherits;
 
 
 	function ConnectFourGame(players, board, turnMap) {
@@ -43240,11 +43591,11 @@
 	module.exports = ConnectFourGame;
 
 /***/ },
-/* 34 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var TableTop = __webpack_require__(1);
-	var inherits = __webpack_require__(4).inherits;
+	var inherits = __webpack_require__(6).inherits;
 
 	function ConnectFourBoard() { 
 	  TableTop.GridBoard.call(this, 7, 7);
@@ -43270,10 +43621,10 @@
 	module.exports = ConnectFourBoard;
 
 /***/ },
-/* 35 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(4).inherits;
+	var inherits = __webpack_require__(6).inherits;
 	var TableTop = __webpack_require__(1);
 
 	function ConnectFourView(game, turnMap) { 
