@@ -10,7 +10,7 @@ var ConnectFourView = require("./connect_four_view.js");
 var board = new ConnectFourBoard();
 var game = new ConnectFourGame(board);
 
-var view = new ConnectFourView(game, turnMap);
+var view = new ConnectFourView(game);
 
 //create our startView
 var startView = new TableTop.StartView(game); 

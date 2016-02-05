@@ -2,8 +2,8 @@ var TableTop = require('tabletop-boardgames');
 var inherits = require('util').inherits;
 
 
-function ConnectFourGame(players, board, turnMap) {
-  TableTop.Game.call(this, players, board, turnMap);
+function ConnectFourGame(board) {
+  TableTop.Game.call(this, board);
   this.currentPlayer = 0;
   this.moveType = TableTop.Constants.moveTypePlaceToken;
   this.moveEvaluationType = TableTop.Constants.moveEvalationTypeGameEvaluator;
