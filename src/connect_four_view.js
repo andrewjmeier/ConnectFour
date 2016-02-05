@@ -1,8 +1,8 @@
 var inherits = require('util').inherits;
 var TableTop = require('tabletop-boardgames');
 
-function ConnectFourView(game, turnMap) { 
-  TableTop.View.call(this, game, turnMap);
+function ConnectFourView(game) { 
+  TableTop.View.call(this, game);
 } 
 
 inherits(ConnectFourView, TableTop.View);
